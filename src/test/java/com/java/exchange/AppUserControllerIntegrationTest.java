@@ -91,6 +91,7 @@ public class AppUserControllerIntegrationTest {
                 .accountBalanceUsd(INITIAL_USD_BALANCE)
                 .accountBalancePln(INITIAL_PLN_BALANCE)
                 .password("securePass2024")
+                .version(1L)
                 .build();
     }
 }
