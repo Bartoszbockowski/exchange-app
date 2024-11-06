@@ -1,18 +1,20 @@
 package com.java.exchange.appuser.service;
 
+import com.java.exchange.appuser.enums.Currency;
+import com.java.exchange.appuser.mapper.AppUserMapper;
 import com.java.exchange.appuser.model.AppUser;
+import com.java.exchange.appuser.repository.UserRepository;
 import com.java.exchange.common.util.WebApiCaller;
 import com.java.exchange.dto.AppUserDTO;
 import com.java.exchange.security.service.SecurityContextHolder;
-import com.java.exchange.appuser.enums.Currency;
-import com.java.exchange.appuser.mapper.AppUserMapper;
-import com.java.exchange.appuser.repository.UserRepository;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,8 +41,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public AppUserDTO exchangeCurrency(Currency sourceCurrency, BigDecimal amount) {
         validateCurrency(sourceCurrency);
+        validateAmount(amount);
+
         Long userId = SecurityContextHolder.getCurrentlyLoggedInUser().getId();
         AppUser appUser = userRepository.getReferenceById(userId);
 
@@ -49,10 +54,19 @@ public class AccountServiceImpl implements AccountService {
         BigDecimal convertedAmount = calculateConvertedAmount(sourceCurrency, amount, currencyRate);
 
         verifySufficientFunds(appUser, sourceCurrency, amount);
-        updateAccountBalances(appUser, sourceCurrency, targetCurrency, amount, convertedAmount);
-
-        userRepository.save(appUser);
+        try {
+            updateAccountBalances(appUser, sourceCurrency, targetCurrency, amount, convertedAmount);
+            userRepository.save(appUser);
+        } catch (OptimisticLockException e) {
+            throw new IllegalStateException("Account balance was modified by another transaction. Please try again.", e);
+        }
         return appUserMapper.toDto(appUser);
+    }
+
+    private void validateAmount(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
     }
 
     private void validateCurrency(Currency currency) {

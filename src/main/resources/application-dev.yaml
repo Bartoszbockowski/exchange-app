@@ -21,7 +21,7 @@ springdoc:
 resilience4j:
   circuitbreaker:
     instances:
-      geoLocationService:
+      nbpApiCircuitBreaker:
         sliding-window-size: 20
         minimum-number-of-calls: 10
         failure-rate-threshold: 50

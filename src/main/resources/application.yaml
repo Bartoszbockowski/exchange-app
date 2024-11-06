@@ -21,7 +21,7 @@ springdoc:
 resilience4j:
   circuitbreaker:
     instances:
-      geoLocationService:
+      nbpApiCircuitBreaker:
         sliding-window-size: 20
         minimum-number-of-calls: 10
         failure-rate-threshold: 50
@@ -41,7 +41,6 @@ resilience4j:
           - org.springframework.web.client.HttpServerErrorException
           - org.springframework.web.client.ResourceAccessException
 
-
 currency:
   api:
     nbp:
@@ -50,3 +49,4 @@ currency:
 jwt:
   secret:
     key: 0secret034n35h45jj345nkj3794gfrhfbjkdf83725
+

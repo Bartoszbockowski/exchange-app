@@ -26,6 +26,10 @@ public class AppUser implements UserDetails {
     @Column(name = "ID")
     private Long id;
 
+    @Version
+    @Column(name = "VERSION")
+    private Long version;
+
     @Column(name = "ACCOUNT_BALANCE_PLN")
     private BigDecimal accountBalancePln;
 
